@@ -3,11 +3,7 @@
 
 import sys
 
-try:
-    import pykitti
-except ImportError as e:
-    print('Could not load module \'pykitti\'. Please run `pip install pykitti`')
-    sys.exit(1)
+import pykitti
 
 import tf
 import os
@@ -239,9 +235,9 @@ def save_static_transforms(bag, kitti_type, transforms, timestamps):
         t = get_static_transform(from_frame_id=transform[0], to_frame_id=transform[1], transform=transform[2])
         tfm.transforms.append(t)
     if kitti_type.find("raw") != -1:
-        time = rospy.Time.from_sec(float(timestamps[1].strftime("%s.%f")))
+        time = rospy.Time.from_sec(float(timestamps[0].strftime("%s.%f"))-1)
     elif kitti_type.find("odom") != -1:
-        time = rospy.Time.from_sec(timestamps[1])
+        time = rospy.Time.from_sec(timestamps[0]-1)
     for i in range(len(tfm.transforms)):
         tfm.transforms[i].header.stamp = time
     bag.write('/tf_static', tfm, t=time)
@@ -336,6 +332,9 @@ def run_kitti2bag():
 
             # tf_static
             transforms = [
+                ('world', 'imu_init', kitti.oxts[0].T_w_imu),
+                ('imu_init', 'velo_init', inv(kitti.calib.T_velo_imu)),
+                ('imu_init', 'camera_init', inv(kitti.calib.T_cam0_imu)),
                 ('base_link', imu_frame_id, T_base_link_to_imu),
                 (imu_frame_id, velo_frame_id, inv(kitti.calib.T_velo_imu)),
                 (imu_frame_id, cameras[0][1], inv(kitti.calib.T_cam0_imu)),
@@ -390,9 +389,9 @@ def run_kitti2bag():
                 ('world', 'velo_init', np.eye(4, 4)),
                 ('world', 'camera_init', inv(kitti.calib.T_cam0_velo)),
                 (cameras[0][1], velo_frame_id, kitti.calib.T_cam0_velo),
-                (cameras[0][1], cameras[1][1], kitti.calib.T_cam0_velo.dot(inv(kitti.calib.T_cam1_velo))),
-                (cameras[0][1], cameras[2][1], kitti.calib.T_cam0_velo.dot(inv(kitti.calib.T_cam2_velo))),
-                (cameras[0][1], cameras[3][1], kitti.calib.T_cam0_velo.dot(inv(kitti.calib.T_cam3_velo)))
+                (velo_frame_id, cameras[1][1], inv(kitti.calib.T_cam1_velo)),
+                (velo_frame_id, cameras[2][1], inv(kitti.calib.T_cam2_velo)),
+                (velo_frame_id, cameras[3][1], inv(kitti.calib.T_cam3_velo))
             ]
 
             util = pykitti.utils.read_calib_file(os.path.join(args.dir,'sequences',args.sequence, 'calib.txt'))
