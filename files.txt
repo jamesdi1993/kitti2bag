@@ -1,0 +1,7 @@
+/usr/local/lib/python2.7/dist-packages/kitti2bag-1.5-py2.7.egg
+/usr/local/bin/kitti2bag
+/usr/local/bin/f2py2
+/usr/local/bin/f2py
+/usr/local/bin/f2py2.7
+/usr/local/bin/easy_install
+/usr/local/bin/easy_install-3.8

@@ -291,6 +291,7 @@ def run_kitti2bag():
     parser.add_argument("-t", "--date", help = "date of the raw dataset (i.e. 2011_09_26), option is only for RAW datasets.")
     parser.add_argument("-r", "--drive", help = "drive number of the raw dataset (i.e. 0001), option is only for RAW datasets.")
     parser.add_argument("-s", "--sequence", choices = odometry_sequences,help = "sequence of the odometry dataset (between 00 - 21), option is only for ODOMETRY datasets.")
+    parser.add_argument("-c", "--color", choices = ["gray", "color"], help= "Choose either gray-scaled or colored images, option is only for ODOMETRY datasets.")
     args = parser.parse_args()
 
     bridge = CvBridge()
@@ -298,6 +299,7 @@ def run_kitti2bag():
     # compression = rosbag.Compression.BZ2
     # compression = rosbag.Compression.LZ4
     
+
     # CAMERAS
     cameras = [
         (0, 'camera_gray_left', '/kitti/camera_gray_left'),
@@ -367,6 +369,7 @@ def run_kitti2bag():
             bag.close()
             
     elif args.kitti_type.find("odom") != -1:
+
         
         if args.sequence == None:
             print("Sequence option is not given. It is mandatory for odometry dataset.")
@@ -407,7 +410,13 @@ def run_kitti2bag():
             # Export
             save_static_transforms(bag, args.kitti_type, transforms, timestamps)
             save_dynamic_tf(bag, args.kitti_type, kitti, initial_time=current_epoch)
-            for cameras in cameras:
+
+            cam_data_to_save = []
+            if args.color == 'gray':
+                cam_data_to_save = cameras[0:2]
+            else:
+                cam_data_to_save = cameras[2:]
+            for cameras in cam_data_to_save:
                 save_camera_data(bag, args.kitti_type, kitti, util, bridge, camera = cameras[0], camera_frame_id = cameras[1], topic=cameras[2], initial_time=current_epoch)
             save_velo_data(bag, args.kitti_type, kitti, velo_frame_id, velo_topic, initial_time=current_epoch)
 
