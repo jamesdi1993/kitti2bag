@@ -348,6 +348,11 @@ def run_kitti2bag():
         (3, 'camera_color_right', '/kitti/camera_color_right')
     ]
 
+    if args.color == 'gray':
+        cam_data_to_save = cameras[0:2]
+    else:
+        cam_data_to_save = cameras[2:]
+
     if args.kitti_type.find("raw") != -1:
     
         if args.date == None:
@@ -400,7 +405,7 @@ def run_kitti2bag():
             save_gps_vel_data(bag, kitti, imu_frame_id, gps_vel_topic)
 
             save_imu_data(bag, kitti, imu_frame_id, imu_topic)
-            for camera in cameras:
+            for camera in cam_data_to_save:
                 save_camera_data(bag, args.kitti_type, kitti, util, bridge, camera=camera[0], camera_frame_id=camera[1], topic=camera[2], initial_time=None)
             # save_velo_data(bag, args.kitti_type, kitti, velo_frame_id, velo_topic, initial_time=None)
 
@@ -445,13 +450,13 @@ def run_kitti2bag():
             ]
 
             util = pykitti.utils.read_calib_file(os.path.join(args.dir,'sequences',args.sequence, 'calib.txt'))
-            current_epoch = (datetime.utcnow() - datetime(1970, 1, 1)).total_seconds()
-            # current_epoch = 0 # use 0 as the starting bag time, this is because when we play the ground-truth file the time needs to be matched. 
+            # current_epoch = (datetime.utcnow() - datetime(1970, 1, 1)).total_seconds()
+            current_epoch = 0 # use 0 as the starting bag time, this is because when we play the ground-truth file the time needs to be matched. 
             timestamps = map(lambda x: current_epoch + x.total_seconds(),kitti.timestamps)
             # Export
             save_static_transforms(bag, args.kitti_type, transforms, timestamps)
-            save_dynamic_tf(bag, args.kitti_type, kitti, initial_time=current_epoch)
-            cam_data_to_save = []
+
+            # save_dynamic_tf(bag, args.kitti_type, kitti, initial_time=current_epoch)
 
             sim_path = args.sim_path
             if sim_path:
@@ -462,10 +467,6 @@ def run_kitti2bag():
                 imu_sim = load_simulated_imu(sim_path)
                 save_simulated_imu_data(bag, imu_sim, imu_frame_id, imu_topic, init_time=current_epoch)
 
-            if args.color == 'gray':
-                cam_data_to_save = cameras[0:2]
-            else:
-                cam_data_to_save = cameras[2:]
             for cameras in cam_data_to_save:
                 save_camera_data(bag, args.kitti_type, kitti, util, bridge, camera = cameras[0], camera_frame_id = cameras[1], topic=cameras[2], initial_time=current_epoch)
             # Not using laser scan at the moment
