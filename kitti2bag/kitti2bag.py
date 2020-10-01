@@ -158,7 +158,6 @@ def save_camera_data(bag, kitti_type, kitti, util, bridge, camera, camera_frame_
         
         calib = CameraInfo()
         calib.header.frame_id = camera_frame_id
-        calib.width, calib.height = tuple(util['S_rect_{}'.format(camera_pad)].tolist())
         calib.distortion_model = 'plumb_bob'
         calib.K = util['K_{}'.format(camera_pad)]
         calib.R = util['R_rect_{}'.format(camera_pad)]
@@ -173,7 +172,11 @@ def save_camera_data(bag, kitti_type, kitti, util, bridge, camera, camera_frame_
         
         calib = CameraInfo()
         calib.header.frame_id = camera_frame_id
+        calib.distortion_model = 'plumb_bob'
         calib.P = util['P{}'.format(camera_pad)]
+        calib.K = util['K_{}'.format(camera_pad)]
+        calib.D = util['D_{}'.format(camera_pad)]
+        calib.R = util['R_rect_{}'.format(camera_pad)]
     
     iterable = zip(image_datetimes, image_filenames)
     bar = progressbar.ProgressBar()
